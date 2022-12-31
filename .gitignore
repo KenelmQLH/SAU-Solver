@@ -121,4 +121,4 @@ note/
 planning_data/
 pretrained_models/
 
-# models/*
+models/
