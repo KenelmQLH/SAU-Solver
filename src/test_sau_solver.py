@@ -1,6 +1,4 @@
 import os
-os.environ["CUDA_VISIBLE_DEVICES"]= "1"
-
 from train_and_evaluate import *
 from models import *
 import time
@@ -11,7 +9,7 @@ from expression_tree import *
 from log_utils import *
 from tqdm import tqdm
 
-batch_size = 16
+batch_size = 32
 embedding_size = 128
 hidden_size = 512
 n_epochs = 80
@@ -40,12 +38,12 @@ if dataset_name == "Math23K":
     data_path = "../dataset/math23k/Math_23K.json"
 elif dataset_name == "hmwp":
     hidden_size = 384
-    # batch_size =  8
+    batch_size = 8
     ckpt_dir = "hmwp_Subtree_SA"
     var_nums = ['x','y']
     data_path = "../dataset/hmwp/questions.json"
 elif dataset_name == "ALG514":
-    # batch_size = 32
+    batch_size = 32
     ckpt_dir = "ALG514_Subtree_SA"
     var_nums = ['x','y']
     data_path = "../dataset/alg514/questions.json"
@@ -196,7 +194,7 @@ for fold in range(5):
         add_log(log_file, logs_content)
         logs_content = "--------------------------------"
         add_log(log_file, logs_content)
-        if epoch > 0 and epoch % 10 == 0 or epoch > n_epochs - 5:
+        if epoch % 1 == 0 or epoch > n_epochs - 5:
             value_ac = 0
             equation_ac = 0
             answer_ac = 0

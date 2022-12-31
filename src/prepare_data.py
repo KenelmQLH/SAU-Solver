@@ -10,11 +10,14 @@ from operation_law import exchange, allocation
 
 
 # pairs: (input_seq, eq_segs, nums, num_pos, ans)
-def prepare_data(pairs_trained, pairs_tested, trim_min_count, generate_nums, copy_nums, tree=False):
+def prepare_data(pairs_trained, pairs_tested, trim_min_count, generate_nums, copy_nums, tree=False, pairs_gen_tested=None):
     input_lang = InputLang()
     output_lang = OutputLang()
     train_pairs = []
     test_pairs = []
+
+    test_gen_pairs = []
+
 
     print("Indexing words")
     for pair in pairs_trained:
@@ -97,7 +100,41 @@ def prepare_data(pairs_trained, pairs_tested, trim_min_count, generate_nums, cop
                                 pair[2], pair[3], pair[4], num_stack))
 
     print('Number of testind data %d' % (len(test_pairs)))
-    return input_lang, output_lang, train_pairs, test_pairs
+
+    if pairs_gen_tested is not None:
+        for pair in pairs_gen_tested:
+            num_stack = []
+            for word in pair[1]:  # out_seq
+                temp_num = []
+                flag_not = True
+                if word not in output_lang.index2word: # 非符号，即word为数字
+                    flag_not = False
+                    for i, j in enumerate(pair[2]): # nums
+                        if j == word:
+                            temp_num.append(i) # 在等式的位置信息
+
+                if not flag_not and len(temp_num) != 0:# 数字在数字列表中
+                    num_stack.append(temp_num)
+                if not flag_not and len(temp_num) == 0:
+                    # 数字不在数字列表中，则生成数字列表长度的位置信息，
+                    # 生成时根据解码器的概率选一个， 参见generate_tree_input
+                    num_stack.append([_ for _ in range(len(pair[2]))])
+
+            num_stack.reverse()
+            input_cell = indexes_from_sentence(input_lang, pair[0])
+            output_cell = indexes_from_sentence(output_lang, pair[1], tree)
+            if len(pair) == 4:
+                # pairs: (input_seq, input_len, eq_segs, eq_len, nums, num_pos, num_stack)
+                test_gen_pairs.append((input_cell, len(input_cell), output_cell, len(output_cell),
+                                pair[2], pair[3], num_stack))
+            else:
+                # pairs: (input_seq, input_len, eq_segs, eq_len, nums, num_pos, ans, num_stack)
+                test_gen_pairs.append((input_cell, len(input_cell), output_cell, len(output_cell),
+                                    pair[2], pair[3], pair[4], num_stack))
+
+        print('Number of test_gen_pairs data %d' % (len(test_gen_pairs)))
+
+    return input_lang, output_lang, train_pairs, test_pairs, test_gen_pairs
 
 
 def prepare_de_data(pairs_trained, pairs_tested, trim_min_count, generate_nums, copy_nums, tree=False):
